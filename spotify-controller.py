@@ -28,14 +28,19 @@ def quit():
     (old_process_pacat,old_process_lame) = old_processes
     old_process_pacat.kill()
     old_process_lame.kill()
-    os.remove(get_name(old_metadata))
+    os.remove(get_path(old_metadata))
   print "Quit."
 
-def get_name(metadata):
-  return u"{0:02d} - {1} - {2}.{3}".format(
+def get_path(metadata):
+  dir_path = "Output/{0}/{1}".format(
+            metadata['xesam:artist'][0],
+            metadata['xesam:album'])
+  if not os.path.exists(dir_path):
+    os.makedirs(dir_path, mode=0o755)
+  return u"{0}/{1:02d} - {2}.{3}".format(
+            dir_path,
             metadata['xesam:trackNumber'],
             metadata['xesam:title'],
-            metadata['xesam:artist'][0],
             "mp3")
 
 def get_length(length):
@@ -74,7 +79,7 @@ def cover_set(id3, key, value):
 def add_tags(metadata):
 
   try:
-    audio = mutagen.File(get_name(metadata), easy=True)
+    audio = mutagen.File(get_path(metadata), easy=True)
     audio.add_tags();
 
     audio.tags.RegisterKey('cover',cover_get,cover_set)
@@ -136,7 +141,7 @@ def handler (interface_name, changed_properties, invaidate_properties):
               shell=False)
 
     process_lame = Popen(['lame', '-r', '-V', '0', '-s', '44.1', 
-              '-b', '320', '-', get_name(metadata)],
+              '-b', '320', '-', get_path(metadata)],
               stdin=process_pacat.stdout,
               stdout=FNULL,
               stderr=FNULL,
